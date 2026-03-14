@@ -230,10 +230,10 @@ func getBasePath() string {
 
 	dir, err := os.Getwd()
 	if err != nil {
-		return "cmd/seedlab"
+		return "sql"
 	}
 
-	return filepath.Join(dir, "cmd", "seedlab")
+	return filepath.Join(dir, "sql")
 }
 
 func getNextVersion(basePath, prefix string) int {
