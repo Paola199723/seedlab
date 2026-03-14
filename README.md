@@ -2,6 +2,35 @@
 
 Aplicación en Go para generar SQL, Excel y diagramas UML a partir de una base de datos PostgreSQL.
 
+## ✨ Características de v1.0
+
+### 1️⃣ Generador de PNG de la base de datos
+- Crea diagramas con:
+  - Nombres de tablas  
+  - Columnas de cada tabla  
+  - Relaciones entre tablas  
+- Actualmente, las relaciones se muestran **verticalmente**.  
+
+### 2️⃣ Creador de diagramas editables en draw.io
+- Genera un archivo que se puede abrir y **modificar directamente en draw.io**.  
+- Representa la estructura completa de la base de datos.  
+
+### 3️⃣ Generador de Excel editable
+- Cada hoja representa una tabla de la base de datos.  
+- Cada columna de la hoja corresponde a una columna de la tabla.  
+- Permite **llenar datos manualmente** que luego se transforman en SQL.  
+
+### 4️⃣ Generador de SQL versionado
+- Genera **sentencias INSERT listas para ejecutar** en la base de datos.  
+- Incluye scripts de **rollback** para revertir cambios si es necesario.  
+
+### 5️⃣ Soporte de variables de entorno (`.env`)
+- Permite configurar:
+  - Conexión a la base de datos (`DATABASE_URL`)  
+  - Nivel de logs (`LOG_LEVEL`)  
+- El usuario puede usar su propia base de datos local **sin exponer credenciales privadas**.  
+
+---
 ## Arquitectura
 
 Clean Architecture con capas:
