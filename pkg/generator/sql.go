@@ -17,7 +17,7 @@ func GenerateInsertRollbackFromExcel(excelPath string) error {
 
 	basePath := getBasePath()
 
-	file, err := excelize.OpenFile(excelPath)
+	file, err := excelize.OpenFile("excel/" + excelPath)
 	if err != nil {
 		return err
 	}
