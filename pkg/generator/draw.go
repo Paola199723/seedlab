@@ -60,22 +60,127 @@ type Geometry struct {
 	As      string   `xml:"as,attr"`
 }
 
-func GenerateDraw(tables []domain.Table, fks []domain.ForeignKey, filename string) error {
+func buildRelationMap(fks []domain.ForeignKey) map[string][]string {
+
+	relations := map[string][]string{}
+
+	for _, fk := range fks {
+
+		relations[fk.Table] =
+			append(relations[fk.Table], fk.ReferencedTable)
+
+		relations[fk.ReferencedTable] =
+			append(relations[fk.ReferencedTable], fk.Table)
+
+	}
+
+	return relations
+}
+
+func GenerateDraw(
+	tables []domain.Table,
+	fks []domain.ForeignKey,
+	filename string,
+) error {
+
+	relationMap := buildRelationMap(fks)
+
+	//--------------------------------
+	// calcular dimensiones dinámicas
+	//--------------------------------
+
+	maxColumns := 0
+
+	for _, t := range tables {
+		if len(t.Columns) > maxColumns {
+			maxColumns = len(t.Columns)
+		}
+	}
+
+	rowHeight := 22
+	headerHeight := 30
+
+	tableHeight := headerHeight + (maxColumns * rowHeight)
+
+	tableWidth := 260
+
+	nodeGapX := tableWidth + 160
+	levelGapY := tableHeight + 200
+
+	canvasWidth := len(tables) * nodeGapX
+
+	startX := canvasWidth / 2
+	startY := tableHeight
+
+	//--------------------------------
+	// layout BFS
+	//--------------------------------
+
+	tableIDs := map[string]string{}
+	positions := map[string][2]int{}
+	visited := map[string]bool{}
+
+	if len(tables) > 0 {
+
+		queue := []string{tables[0].Name}
+
+		positions[tables[0].Name] = [2]int{startX, startY}
+		visited[tables[0].Name] = true
+
+		level := 1
+
+		for len(queue) > 0 {
+
+			nextQueue := []string{}
+			x := startX - (len(queue)/2)*nodeGapX
+
+			for _, tableName := range queue {
+
+				for _, rel := range relationMap[tableName] {
+
+					if visited[rel] {
+						continue
+					}
+
+					posX := x
+					posY := startY + level*levelGapY
+
+					positions[rel] = [2]int{posX, posY}
+
+					x += nodeGapX
+
+					visited[rel] = true
+					nextQueue = append(nextQueue, rel)
+
+				}
+
+			}
+
+			queue = nextQueue
+			level++
+
+		}
+
+	}
+
+	//--------------------------------
+	// crear documento draw.io
+	//--------------------------------
 
 	mxfile := Mxfile{
 		Host: "app.diagrams.net",
 		Diagram: Diagram{
 			ID:   "schema",
-			Name: "UML Schema",
+			Name: "ERD",
 			MxGraphModel: MxGraphModel{
-				Dx:         "1200",
-				Dy:         "800",
+				Dx:         "2000",
+				Dy:         "1600",
 				Grid:       "1",
 				GridSize:   "10",
 				Page:       "1",
 				PageScale:  "1",
-				PageWidth:  "850",
-				PageHeight: "1100",
+				PageWidth:  "2400",
+				PageHeight: "2000",
 				Root: Root{
 					Cells: []Cell{
 						{ID: "0"},
@@ -86,59 +191,61 @@ func GenerateDraw(tables []domain.Table, fks []domain.ForeignKey, filename strin
 		},
 	}
 
-	tableIDs := map[string]string{}
-
-	y := 40
-
 	//--------------------------------
-	// Crear tablas UML
+	// dibujar tablas
 	//--------------------------------
 
 	for i, table := range tables {
 
-		id := fmt.Sprintf("%d", i+2)
+		id := fmt.Sprintf("t%d", i)
 		tableIDs[table.Name] = id
 
-		// texto UML
-		value := fmt.Sprintf("<b>%s</b><br>", table.Name)
+		pos := positions[table.Name]
 
-		for _, col := range table.Columns {
-			value += fmt.Sprintf("+ %s : %s<br>", col.Name, col.Type)
+		if pos == [2]int{0, 0} {
+			pos = [2]int{40 + i*nodeGapX, 40}
 		}
 
-		// calcular altura dinámica
-		rowHeight := 22
-		headerHeight := 30
 		height := headerHeight + (len(table.Columns) * rowHeight)
 
-		// CUADRO de la tabla
+		text := ""
+
+		for _, col := range table.Columns {
+
+			text += fmt.Sprintf(
+				"+ %s : %s<br>",
+				col.Name,
+				col.Type,
+			)
+
+		}
+
 		tableCell := Cell{
 			ID:     id,
 			Value:  table.Name,
-			Style:  "shape=swimlane;fontStyle=1;startSize=28;html=1;",
+			Style:  "shape=swimlane;fontStyle=1;startSize=30;whiteSpace=wrap;html=1;",
 			Vertex: "1",
 			Parent: "1",
 			Geometry: &Geometry{
-				X:      "40",
-				Y:      fmt.Sprintf("%d", y),
-				Width:  "260",
+				X:      fmt.Sprintf("%d", pos[0]),
+				Y:      fmt.Sprintf("%d", pos[1]),
+				Width:  fmt.Sprintf("%d", tableWidth),
 				Height: fmt.Sprintf("%d", height),
 				As:     "geometry",
 			},
 		}
 
-		// TEXTO interno (columnas)
 		textCell := Cell{
 			ID:     id + "_text",
-			Value:  value,
-			Style:  "text;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;html=1;",
+			Value:  text,
+			Style:  "text;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;whiteSpace=wrap;html=1;",
 			Vertex: "1",
 			Parent: id,
 			Geometry: &Geometry{
 				X:      "0",
-				Y:      "28",
-				Width:  "260",
-				Height: fmt.Sprintf("%d", height-28),
+				Y:      "30",
+				Width:  fmt.Sprintf("%d", tableWidth),
+				Height: fmt.Sprintf("%d", height-30),
 				As:     "geometry",
 			},
 		}
@@ -149,30 +256,28 @@ func GenerateDraw(tables []domain.Table, fks []domain.ForeignKey, filename strin
 		mxfile.Diagram.MxGraphModel.Root.Cells =
 			append(mxfile.Diagram.MxGraphModel.Root.Cells, textCell)
 
-		y += height + 40
 	}
 
 	//--------------------------------
-	// Crear relaciones UML
+	// dibujar relaciones
 	//--------------------------------
 
 	for i, fk := range fks {
 
-		sourceID := tableIDs[fk.Table]
-		targetID := tableIDs[fk.ReferencedTable]
+		source := tableIDs[fk.Table]
+		target := tableIDs[fk.ReferencedTable]
 
-		if sourceID == "" || targetID == "" {
+		if source == "" || target == "" {
 			continue
 		}
 
 		cell := Cell{
 			ID:     fmt.Sprintf("fk%d", i),
-			Value:  "1..n",
 			Edge:   "1",
-			Style:  "endArrow=block;endFill=1;edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;",
+			Style:  "endArrow=block;edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;",
 			Parent: "1",
-			Source: sourceID,
-			Target: targetID,
+			Source: source,
+			Target: target,
 			Geometry: &Geometry{
 				As: "geometry",
 			},
@@ -180,16 +285,14 @@ func GenerateDraw(tables []domain.Table, fks []domain.ForeignKey, filename strin
 
 		mxfile.Diagram.MxGraphModel.Root.Cells =
 			append(mxfile.Diagram.MxGraphModel.Root.Cells, cell)
-	}
 
-	//--------------------------------
-	// Guardar archivo
-	//--------------------------------
+	}
 
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
+
 	defer file.Close()
 
 	encoder := xml.NewEncoder(file)
