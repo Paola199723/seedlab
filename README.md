@@ -30,6 +30,15 @@ Aplicación en Go para generar SQL, Excel y diagramas UML a partir de una base d
   - Nivel de logs (`LOG_LEVEL`)  
 - El usuario puede usar su propia base de datos local **sin exponer credenciales privadas**.  
 
+## 1.2.0
+- Creación de versión de base de datos en formato `.json` para documentar cambios en tablas.  
+- Versionamiento de los archivos PNG, Draw, Excel y SQL asociados a cada cambio de tabla.  
+- Ajuste de `.env` para configuración de la base de datos y nombres de los archivos a generar.  
+- Validación de documentación `.json` con la base de datos actual para **evitar generación repetida** de archivos PNG, Draw y SQL.  
+- **Normalización de snapshots**: ordenación de tablas, columnas y foreign keys para comparación consistente entre snapshots.  
+- **Omisión del campo `version` en la comparación** para prevenir falsos positivos y duplicados innecesarios.  
+- Formato de versión en archivos generados con ceros a la izquierda (`0001`, `0002`, …) para mantener **orden cronológico y consistencia**.  
+- Mejor manejo de errores y conflictos: validación de cambios locales antes de generar archivos y control de snapshots inexistentes o nuevos proyectos.
 ---
 ## Arquitectura
 
