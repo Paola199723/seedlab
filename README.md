@@ -47,7 +47,7 @@ Clean Architecture con capas:
 3. Configurar .env en configs/.env con DATABASE_URL
 4. Ejecutar `go mod tidy`
 5. Construir `go build ./cmd/seedlab`
-6. Ejecutar `./seedlab`
+6. Ejecutar `./seedlab` o ejecutar proyecto completo `go run cmd/seedlab/main.go`
 
 ## Funcionalidades
 
