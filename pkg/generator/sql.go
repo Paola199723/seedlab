@@ -13,15 +13,14 @@ import (
 const batchSize = 500
 const deleteBatch = 500
 
-func GenerateInsertRollbackFromExcel(excelPath string) error {
+func GenerateInsertRollbackFromExcel(version int, excelPath string) error {
 
 	basePath := getBasePath()
 
-	file, err := excelize.OpenFile("excel/" + excelPath)
+	file, err := excelize.OpenFile(filepath.Join("excel", excelPath))
 	if err != nil {
 		return err
 	}
-
 	defer file.Close()
 
 	sheets := file.GetSheetList()
@@ -30,11 +29,8 @@ func GenerateInsertRollbackFromExcel(excelPath string) error {
 		return fmt.Errorf("no sheets found in excel")
 	}
 
-	insertVersion := getNextVersion(basePath, "insert_version")
-	rollbackVersion := getNextVersion(basePath, "rollback_version")
-
-	insertDir := filepath.Join(basePath, fmt.Sprintf("insert_version%d", insertVersion))
-	rollbackDir := filepath.Join(basePath, fmt.Sprintf("rollback_version%d", rollbackVersion))
+	insertDir := filepath.Join(basePath, fmt.Sprintf("insert_version%04d", version))
+	rollbackDir := filepath.Join(basePath, fmt.Sprintf("rollback_version%04d", version))
 
 	err = os.MkdirAll(insertDir, os.ModePerm)
 	if err != nil {
@@ -48,6 +44,11 @@ func GenerateInsertRollbackFromExcel(excelPath string) error {
 
 	fmt.Println("Insert folder:", insertDir)
 	fmt.Println("Rollback folder:", rollbackDir)
+
+	var insertFiles []string
+	var rollbackFiles []string
+
+	fileIndex := 1
 
 	for _, sheet := range sheets {
 
@@ -67,8 +68,8 @@ func GenerateInsertRollbackFromExcel(excelPath string) error {
 		pkIndex := detectPrimaryKey(columns)
 		pkColumn := columns[pkIndex]
 
-		insertFileName := fmt.Sprintf("insert_%s_%d.sql", strings.ToLower(sheet), insertVersion)
-		rollbackFileName := fmt.Sprintf("rollback_%s_%d.sql", strings.ToLower(sheet), rollbackVersion)
+		insertFileName := fmt.Sprintf("%04d_%s.sql", fileIndex, strings.ToLower(sheet))
+		rollbackFileName := fmt.Sprintf("%04d_%s.sql", fileIndex, strings.ToLower(sheet))
 
 		insertFilePath := filepath.Join(insertDir, insertFileName)
 		rollbackFilePath := filepath.Join(rollbackDir, rollbackFileName)
@@ -113,13 +114,13 @@ func GenerateInsertRollbackFromExcel(excelPath string) error {
 
 			if len(batch) >= batchSize {
 
-				writeInsertBatch(insertFile, sheet, batch)
+				writeInsertBatch(insertFile, sheet, columns, batch)
 				batch = []string{}
 			}
 		}
 
 		if len(batch) > 0 {
-			writeInsertBatch(insertFile, sheet, batch)
+			writeInsertBatch(insertFile, sheet, columns, batch)
 		}
 
 		writeRollback(rollbackFile, sheet, pkColumn, ids)
@@ -129,18 +130,29 @@ func GenerateInsertRollbackFromExcel(excelPath string) error {
 
 		insertFile.Close()
 		rollbackFile.Close()
+
+		insertFiles = append(insertFiles, insertFileName)
+		rollbackFiles = append(rollbackFiles, rollbackFileName)
+
+		fileIndex++
 	}
+
+	reverseSlice(rollbackFiles)
+
+	generateMasterScript(insertDir, "run_insert.sql", insertFiles)
+	generateMasterScript(rollbackDir, "run_rollback.sql", rollbackFiles)
 
 	fmt.Println("SQL generation completed successfully")
 
 	return nil
 }
 
-func writeInsertBatch(file *os.File, table string, batch []string) {
+func writeInsertBatch(file *os.File, table string, columns []string, batch []string) {
 
 	sql := fmt.Sprintf(
-		"INSERT INTO %s VALUES\n%s;\n\n",
+		"INSERT INTO %s (%s)\nVALUES\n%s;\n\n",
 		table,
+		strings.Join(columns, ","),
 		strings.Join(batch, ",\n"),
 	)
 
@@ -224,6 +236,28 @@ func isRowEmpty(row []string) bool {
 	}
 
 	return true
+}
+
+func reverseSlice(slice []string) {
+
+	for i, j := 0, len(slice)-1; i < j; i, j = i+1, j-1 {
+		slice[i], slice[j] = slice[j], slice[i]
+	}
+}
+
+func generateMasterScript(dir string, name string, files []string) {
+
+	path := filepath.Join(dir, name)
+
+	file, err := os.Create(path)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	for _, f := range files {
+		file.WriteString(fmt.Sprintf("\\i %s\n", f))
+	}
 }
 
 func getBasePath() string {

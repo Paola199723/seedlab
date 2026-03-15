@@ -280,11 +280,10 @@ func GenerateDraw(
 		return err
 	}
 
-	//--------------------------------
-	// ruta final archivo
-	//--------------------------------
+	// generar nombre versionado
+	finalName := fmt.Sprintf("%04d_%s.draw", filename)
 
-	outputPath := filepath.Join(folder, filename)
+	outputPath := filepath.Join(folder, finalName)
 
 	file, err := os.Create(outputPath)
 	if err != nil {

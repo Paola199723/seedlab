@@ -8,23 +8,27 @@ import (
 	"seedlab/pkg/generator"
 	"strconv"
 
+	"seedlab/internal/config"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
 type CLIAdapter struct {
-	app      *tview.Application
-	useCase  usecase.TableUseCase
-	tables   []domain.Table
-	fks      []domain.ForeignKey
-	selected map[string]bool
+	app       *tview.Application
+	useCase   usecase.TableUseCase
+	tables    []domain.Table
+	fks       []domain.ForeignKey
+	selected  map[string]bool
+	cfgConfig *config.Config
 }
 
-func NewCLIAdapter(useCase usecase.TableUseCase) *CLIAdapter {
+func NewCLIAdapter(useCase usecase.TableUseCase, cfg *config.Config) *CLIAdapter {
 	return &CLIAdapter{
-		app:      tview.NewApplication(),
-		useCase:  useCase,
-		selected: make(map[string]bool),
+		app:       tview.NewApplication(),
+		useCase:   useCase,
+		selected:  make(map[string]bool),
+		cfgConfig: cfg,
 	}
 }
 
@@ -125,17 +129,18 @@ func (c *CLIAdapter) generate(action string) {
 			}
 		}
 	}
+	fileName := fmt.Sprintf("%04d_%s", c.cfgConfig.Version, c.cfgConfig.NameArchive)
 
 	var err error
 	switch action {
 	case "png":
-		err = generator.GeneratePNG(selectedTables, c.fks, "schema.png")
+		err = generator.GeneratePNG(selectedTables, c.fks, fileName+".png")
 	case "draw":
-		err = generator.GenerateDraw(selectedTables, c.fks, "schema.drawio")
+		err = generator.GenerateDraw(selectedTables, c.fks, fileName+".drawio")
 	case "excel":
-		err = generator.GenerateExcel(selectedTables, "schema.xlsx")
+		err = generator.GenerateExcel(selectedTables, fileName+".xlsx")
 	case "sql":
-		err := generator.GenerateInsertRollbackFromExcel("schema.xlsx")
+		err := generator.GenerateInsertRollbackFromExcel(c.cfgConfig.Version, c.cfgConfig.NameArchive+".xlsx")
 		if err != nil {
 			message2 := fmt.Sprintln("Error generando SQL:", err)
 			modal := tview.NewModal().
