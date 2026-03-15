@@ -281,7 +281,7 @@ func GenerateDraw(
 	}
 
 	// generar nombre versionado
-	finalName := fmt.Sprintf("%04d_%s.draw", filename)
+	finalName := fmt.Sprintf("%s.draw", filename)
 
 	outputPath := filepath.Join(folder, finalName)
 
