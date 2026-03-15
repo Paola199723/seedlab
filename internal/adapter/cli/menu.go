@@ -140,7 +140,7 @@ func (c *CLIAdapter) generate(action string) {
 	case "excel":
 		err = generator.GenerateExcel(selectedTables, fileName+".xlsx")
 	case "sql":
-		err := generator.GenerateInsertRollbackFromExcel(c.cfgConfig.Version, c.cfgConfig.NameArchive+".xlsx")
+		err := generator.GenerateInsertRollbackFromExcel(c.cfgConfig.Version, fileName+".xlsx")
 		if err != nil {
 			message2 := fmt.Sprintln("Error generando SQL:", err)
 			modal := tview.NewModal().
