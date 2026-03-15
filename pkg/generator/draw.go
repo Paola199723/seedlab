@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"os"
+	"path/filepath"
 	"seedlab/internal/domain"
 )
 
@@ -85,10 +86,6 @@ func GenerateDraw(
 
 	relationMap := buildRelationMap(fks)
 
-	//--------------------------------
-	// calcular dimensiones dinámicas
-	//--------------------------------
-
 	maxColumns := 0
 
 	for _, t := range tables {
@@ -111,10 +108,6 @@ func GenerateDraw(
 
 	startX := canvasWidth / 2
 	startY := tableHeight
-
-	//--------------------------------
-	// layout BFS
-	//--------------------------------
 
 	tableIDs := map[string]string{}
 	positions := map[string][2]int{}
@@ -163,10 +156,6 @@ func GenerateDraw(
 
 	}
 
-	//--------------------------------
-	// crear documento draw.io
-	//--------------------------------
-
 	mxfile := Mxfile{
 		Host: "app.diagrams.net",
 		Diagram: Diagram{
@@ -190,10 +179,6 @@ func GenerateDraw(
 			},
 		},
 	}
-
-	//--------------------------------
-	// dibujar tablas
-	//--------------------------------
 
 	for i, table := range tables {
 
@@ -258,10 +243,6 @@ func GenerateDraw(
 
 	}
 
-	//--------------------------------
-	// dibujar relaciones
-	//--------------------------------
-
 	for i, fk := range fks {
 
 		source := tableIDs[fk.Table]
@@ -288,7 +269,23 @@ func GenerateDraw(
 
 	}
 
-	file, err := os.Create(filename)
+	//--------------------------------
+	// crear carpeta draw
+	//--------------------------------
+
+	folder := "draw"
+
+	err := os.MkdirAll(folder, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	// generar nombre versionado
+	finalName := fmt.Sprintf("%s.draw", filename)
+
+	outputPath := filepath.Join(folder, finalName)
+
+	file, err := os.Create(outputPath)
 	if err != nil {
 		return err
 	}
