@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 	"seedlab/internal/adapter/cli"
 	"seedlab/internal/repository"
 	"seedlab/internal/schema"
@@ -18,9 +19,23 @@ func main() {
 	cfg := config.Load()
 
 	if err := cfg; err != nil {
-		log.Println("No se pudo cargar .env, usando variables de entorno")
+		if os.Getenv("DEBUG") == "true" {
+        	log.Println("No se pudo cargar .env")
+   		 }
 	}
 
+	args := os.Args
+
+	if len(args) > 1 {
+		err := config.RunCLICommand(args, cfg)
+		if err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
+
+	// modo interactivo
+	
 	// Conectar a BD
 	pool, err := pgxpool.New(context.Background(), cfg.DatabaseURL)
 	if err != nil {
@@ -78,5 +93,6 @@ func main() {
 	if err := cliAdapter.Run(context.Background()); err != nil {
 		log.Fatal(err)
 	}
+	
 
 }

@@ -7,6 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"seedlab/internal/domain"
+	"seedlab/internal/schema"
+	"seedlab/pkg/generator"
+
 	"github.com/joho/godotenv"
 )
 
@@ -70,4 +74,74 @@ func getNextDrawVersion(folder string) (int, error) {
 	}
 
 	return maxVersion + 1, nil
+}
+func RunCLICommand(args []string,cfg *Config) error {
+	var err error
+	last, _ := schema.LoadLastSnapshot(cfg.NameArchive)
+	var selectedTables = MapSnapshotToDomain(*last)
+	switch args[1] {
+
+	case "png":
+		err = generator.GeneratePNG(selectedTables.Tables, selectedTables.ForeignKeys, cfg.NameArchive+".png")
+	case "draw":
+		err = generator.GenerateDraw(selectedTables.Tables, selectedTables.ForeignKeys, cfg.NameArchive+".drawio")
+	//case "excel":
+		//err = generator.GenerateExcel(selectedTables, fileName+".xlsx")
+	case "all":
+		err = generator.GeneratePNG(selectedTables.Tables, selectedTables.ForeignKeys, cfg.NameArchive+".png")
+		if err == nil {
+			err = generator.GenerateDraw(selectedTables.Tables, selectedTables.ForeignKeys, cfg.NameArchive+".drawio")
+		}
+		if err != nil {
+			fmt.Println("Unknown command")
+		}
+	default:
+		fmt.Println("Unknown command")
+	}
+	return err
+}
+func MapSnapshotToDomain(snapshot schema.Snapshot) domain.DatabaseSchema {
+
+	var tables []domain.Table
+	var fks []domain.ForeignKey
+
+	for _, t := range snapshot.Tables {
+
+		table := domain.Table{
+			Name:       t.Name,
+			PrimaryKey: t.PrimaryKey,
+		}
+
+		for _, c := range t.Columns {
+
+			column := domain.Column{
+				Name:         c.Name,
+				Type:         c.Type,
+				IsNullable:   c.IsNullable,
+				IsUnique:     c.IsUnique,
+				DefaultValue: c.DefaultValue,
+			}
+
+			table.Columns = append(table.Columns, column)
+		}
+
+		tables = append(tables, table)
+	}
+
+	for _, fk := range snapshot.ForeignKeys {
+
+		domainFK := domain.ForeignKey{
+			Table:            fk.Table,
+			Column:           fk.Column,
+			ReferencedTable:  fk.ReferencedTable,
+			ReferencedColumn: fk.ReferencedColumn,
+		}
+
+		fks = append(fks, domainFK)
+	}
+
+	return domain.DatabaseSchema{
+		Tables:      tables,
+		ForeignKeys: fks,
+	}
 }
