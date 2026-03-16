@@ -1,0 +1,30 @@
+name: SeedLab CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.22'
+
+    - name: Install dependencies
+      run: go mod tidy
+
+    - name: Build CLI
+      run: go build -o seedlab ./cmd/seedlab
+
+    - name: Run CLI command
+      run: ./seedlab png
