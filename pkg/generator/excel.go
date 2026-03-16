@@ -8,7 +8,7 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-func GenerateExcel(tables []domain.Table, filename string) error {
+func GenerateExcel(tables []domain.Table, filename string,fakeRows int) error {
 
 	// crear carpeta excel si no existe
 	excelDir := "excel"
@@ -40,7 +40,6 @@ func GenerateExcel(tables []domain.Table, filename string) error {
 		//--------------------------------
 		// headers columnas
 		//--------------------------------
-
 		for j, col := range table.Columns {
 
 			cell, _ := excelize.CoordinatesToCellName(j+1, 1)
@@ -48,9 +47,26 @@ func GenerateExcel(tables []domain.Table, filename string) error {
 			f.SetCellValue(sheetName, cell, col.Name)
 		}
 
+		if fakeRows > 0 {
+
+			for r := 0; r < fakeRows; r++ {
+
+				for cIndex, col := range table.Columns {
+
+					cell, _ := excelize.CoordinatesToCellName(cIndex+1, r+2)
+
+					value := fakeValue(col.Name, col.Type, r+1)
+
+					f.SetCellValue(sheetName, cell, value)
+				}
+			}
+		}
+
+
 		if i == 0 {
 			f.SetActiveSheet(index)
 		}
+		
 	}
 
 	//--------------------------------

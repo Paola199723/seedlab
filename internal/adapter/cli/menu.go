@@ -42,7 +42,23 @@ func (c *CLIAdapter) Run(ctx context.Context) error {
 
 	return c.showMainMenu()
 }
+func (c *CLIAdapter) showExcelMenu() {
 
+	menu := tview.NewList().
+		AddItem("1. Generar Excel vacío (llenado manual)", "", '1', func() {
+			c.showTableSelection("excel_empty")
+		}).
+		AddItem("2. Generar Excel con Fake Data", "", '2', func() {
+			c.showTableSelection("excel_fake")
+		}).
+		AddItem("3. Volver", "", '3', func() {
+			c.showMainMenu()
+		})
+
+	menu.SetBorder(true).SetTitle("Generación de Excel")
+
+	c.app.SetRoot(menu, true)
+}
 func (c *CLIAdapter) showMainMenu() error {
 	menu := tview.NewList().
 		AddItem("1. Generar PNG de las tablas", "", '1', func() {
@@ -52,7 +68,8 @@ func (c *CLIAdapter) showMainMenu() error {
 			c.showTableSelection("draw")
 		}).
 		AddItem("3. Generar Excel de las tablas", "", '3', func() {
-			c.showTableSelection("excel")
+			//c.showTableSelection("excel")
+			c.showExcelMenu()
 		}).
 		AddItem("4. Generar SQL de INSERT + ROLLBACK desde Excel", "", '4', func() {
 			c.showTableSelection("sql")
@@ -137,8 +154,12 @@ func (c *CLIAdapter) generate(action string) {
 		err = generator.GeneratePNG(selectedTables, c.fks, fileName+".png")
 	case "draw":
 		err = generator.GenerateDraw(selectedTables, c.fks, fileName+".drawio")
-	case "excel":
-		err = generator.GenerateExcel(selectedTables, fileName+".xlsx")
+	//case "excel":
+		//err = generator.GenerateExcel(selectedTables, fileName+".xlsx")
+	case "excel_empty":
+		err = generator.GenerateExcel(selectedTables, fileName+".xlsx", 0)
+	case "excel_fake":
+		err = generator.GenerateExcel(selectedTables, fileName+".xlsx", 10)
 	case "sql":
 		err := generator.GenerateInsertRollbackFromExcel(c.cfgConfig.Version, fileName+".xlsx")
 		if err != nil {
