@@ -1,0 +1,476 @@
+{
+  "version": 1,
+  "tables": [
+    {
+      "name": "categories",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "is_nullable": false,
+          "is_unique": false,
+          "default_value": "nextval('categories_id_seq'::regclass)"
+        },
+        {
+          "name": "external_id",
+          "type": "integer",
+          "is_nullable": true,
+          "is_unique": true
+        },
+        {
+          "name": "name",
+          "type": "character varying",
+          "is_nullable": false,
+          "is_unique": false
+        },
+        {
+          "name": "slug",
+          "type": "character varying",
+          "is_nullable": true,
+          "is_unique": false
+        },
+        {
+          "name": "image",
+          "type": "text",
+          "is_nullable": true,
+          "is_unique": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "is_nullable": true,
+          "is_unique": false,
+          "default_value": "now()"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "is_nullable": true,
+          "is_unique": false,
+          "default_value": "now()"
+        }
+      ]
+    },
+    {
+      "name": "payment_items",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "is_nullable": false,
+          "is_unique": false,
+          "default_value": "nextval('payment_items_id_seq'::regclass)"
+        },
+        {
+          "name": "payment_id",
+          "type": "integer",
+          "is_nullable": true,
+          "is_unique": false
+        },
+        {
+          "name": "product_id",
+          "type": "integer",
+          "is_nullable": true,
+          "is_unique": false
+        },
+        {
+          "name": "product_title",
+          "type": "character varying",
+          "is_nullable": false,
+          "is_unique": false
+        },
+        {
+          "name": "product_description",
+          "type": "text",
+          "is_nullable": true,
+          "is_unique": false
+        },
+        {
+          "name": "unit_price",
+          "type": "numeric",
+          "is_nullable": false,
+          "is_unique": false
+        },
+        {
+          "name": "quantity",
+          "type": "integer",
+          "is_nullable": false,
+          "is_unique": false
+        },
+        {
+          "name": "subtotal",
+          "type": "numeric",
+          "is_nullable": false,
+          "is_unique": false
+        }
+      ]
+    },
+    {
+      "name": "payments",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "is_nullable": false,
+          "is_unique": false,
+          "default_value": "nextval('payments_id_seq'::regclass)"
+        },
+        {
+          "name": "user_id",
+          "type": "integer",
+          "is_nullable": true,
+          "is_unique": false
+        },
+        {
+          "name": "wompi_transaction_id",
+          "type": "character varying",
+          "is_nullable": true,
+          "is_unique": true
+        },
+        {
+          "name": "wompi_reference",
+          "type": "character varying",
+          "is_nullable": true,
+          "is_unique": false
+        },
+        {
+          "name": "total_amount",
+          "type": "numeric",
+          "is_nullable": false,
+          "is_unique": false
+        },
+        {
+          "name": "status",
+          "type": "character varying",
+          "is_nullable": false,
+          "is_unique": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "is_nullable": true,
+          "is_unique": false,
+          "default_value": "CURRENT_TIMESTAMP"
+        }
+      ]
+    },
+    {
+      "name": "product",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "is_nullable": false,
+          "is_unique": false,
+          "default_value": "nextval('product_id_seq'::regclass)"
+        },
+        {
+          "name": "description",
+          "type": "character varying",
+          "is_nullable": true,
+          "is_unique": false
+        },
+        {
+          "name": "price",
+          "type": "numeric",
+          "is_nullable": false,
+          "is_unique": false
+        },
+        {
+          "name": "shipping_cost",
+          "type": "numeric",
+          "is_nullable": false,
+          "is_unique": false
+        },
+        {
+          "name": "category",
+          "type": "character varying",
+          "is_nullable": true,
+          "is_unique": false
+        },
+        {
+          "name": "img",
+          "type": "character varying",
+          "is_nullable": true,
+          "is_unique": false
+        },
+        {
+          "name": "stock",
+          "type": "integer",
+          "is_nullable": false,
+          "is_unique": false
+        },
+        {
+          "name": "impuesto",
+          "type": "integer",
+          "is_nullable": true,
+          "is_unique": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "is_nullable": false,
+          "is_unique": false,
+          "default_value": "now()"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "is_nullable": false,
+          "is_unique": false,
+          "default_value": "now()"
+        }
+      ]
+    },
+    {
+      "name": "product_images",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "is_nullable": false,
+          "is_unique": false,
+          "default_value": "nextval('product_images_id_seq'::regclass)"
+        },
+        {
+          "name": "product_id",
+          "type": "integer",
+          "is_nullable": false,
+          "is_unique": false
+        },
+        {
+          "name": "url",
+          "type": "text",
+          "is_nullable": false,
+          "is_unique": false
+        },
+        {
+          "name": "position",
+          "type": "integer",
+          "is_nullable": true,
+          "is_unique": false,
+          "default_value": "0"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "is_nullable": true,
+          "is_unique": false,
+          "default_value": "now()"
+        }
+      ]
+    },
+    {
+      "name": "products",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "is_nullable": false,
+          "is_unique": false,
+          "default_value": "nextval('products_id_seq'::regclass)"
+        },
+        {
+          "name": "external_id",
+          "type": "integer",
+          "is_nullable": true,
+          "is_unique": true
+        },
+        {
+          "name": "title",
+          "type": "character varying",
+          "is_nullable": false,
+          "is_unique": false
+        },
+        {
+          "name": "slug",
+          "type": "character varying",
+          "is_nullable": true,
+          "is_unique": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "is_nullable": true,
+          "is_unique": false
+        },
+        {
+          "name": "price",
+          "type": "numeric",
+          "is_nullable": false,
+          "is_unique": false
+        },
+        {
+          "name": "stock",
+          "type": "integer",
+          "is_nullable": false,
+          "is_unique": false,
+          "default_value": "10"
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "is_nullable": true,
+          "is_unique": false,
+          "default_value": "true"
+        },
+        {
+          "name": "category_id",
+          "type": "integer",
+          "is_nullable": false,
+          "is_unique": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "is_nullable": true,
+          "is_unique": false,
+          "default_value": "now()"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "is_nullable": true,
+          "is_unique": false,
+          "default_value": "now()"
+        }
+      ]
+    },
+    {
+      "name": "user",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "is_nullable": false,
+          "is_unique": false,
+          "default_value": "nextval('user_id_seq'::regclass)"
+        },
+        {
+          "name": "email",
+          "type": "character varying",
+          "is_nullable": false,
+          "is_unique": true
+        },
+        {
+          "name": "password",
+          "type": "character varying",
+          "is_nullable": false,
+          "is_unique": false
+        },
+        {
+          "name": "full_name",
+          "type": "character varying",
+          "is_nullable": false,
+          "is_unique": false
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "is_nullable": false,
+          "is_unique": false,
+          "default_value": "nextval('users_id_seq'::regclass)"
+        },
+        {
+          "name": "email",
+          "type": "character varying",
+          "is_nullable": false,
+          "is_unique": true
+        },
+        {
+          "name": "password_hash",
+          "type": "text",
+          "is_nullable": false,
+          "is_unique": false
+        },
+        {
+          "name": "full_name",
+          "type": "character varying",
+          "is_nullable": false,
+          "is_unique": false
+        },
+        {
+          "name": "cedula",
+          "type": "character varying",
+          "is_nullable": false,
+          "is_unique": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "is_nullable": true,
+          "is_unique": false,
+          "default_value": "CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "is_nullable": true,
+          "is_unique": false,
+          "default_value": "CURRENT_TIMESTAMP"
+        }
+      ]
+    },
+    {
+      "name": "venta",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "is_nullable": false,
+          "is_unique": false,
+          "default_value": "nextval('venta_id_seq'::regclass)"
+        },
+        {
+          "name": "total",
+          "type": "numeric",
+          "is_nullable": true,
+          "is_unique": false
+        },
+        {
+          "name": "impuesto",
+          "type": "numeric",
+          "is_nullable": true,
+          "is_unique": false
+        },
+        {
+          "name": "id_transaction",
+          "type": "character varying",
+          "is_nullable": true,
+          "is_unique": false
+        }
+      ]
+    }
+  ],
+  "foreign_keys": [
+    {
+      "table": "payments",
+      "column": "user_id",
+      "referenced_table": "users",
+      "referenced_column": "id"
+    },
+    {
+      "table": "payment_items",
+      "column": "payment_id",
+      "referenced_table": "payments",
+      "referenced_column": "id"
+    },
+    {
+      "table": "products",
+      "column": "category_id",
+      "referenced_table": "categories",
+      "referenced_column": "id"
+    },
+    {
+      "table": "product_images",
+      "column": "product_id",
+      "referenced_table": "products",
+      "referenced_column": "id"
+    }
+  ]
+}

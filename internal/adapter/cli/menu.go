@@ -8,23 +8,27 @@ import (
 	"seedlab/pkg/generator"
 	"strconv"
 
+	"seedlab/internal/config"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
 type CLIAdapter struct {
-	app      *tview.Application
-	useCase  usecase.TableUseCase
-	tables   []domain.Table
-	fks      []domain.ForeignKey
-	selected map[string]bool
+	app       *tview.Application
+	useCase   usecase.TableUseCase
+	tables    []domain.Table
+	fks       []domain.ForeignKey
+	selected  map[string]bool
+	cfgConfig *config.Config
 }
 
-func NewCLIAdapter(useCase usecase.TableUseCase) *CLIAdapter {
+func NewCLIAdapter(useCase usecase.TableUseCase, cfg *config.Config) *CLIAdapter {
 	return &CLIAdapter{
-		app:      tview.NewApplication(),
-		useCase:  useCase,
-		selected: make(map[string]bool),
+		app:       tview.NewApplication(),
+		useCase:   useCase,
+		selected:  make(map[string]bool),
+		cfgConfig: cfg,
 	}
 }
 
@@ -38,7 +42,23 @@ func (c *CLIAdapter) Run(ctx context.Context) error {
 
 	return c.showMainMenu()
 }
+func (c *CLIAdapter) showExcelMenu() {
 
+	menu := tview.NewList().
+		AddItem("1. Generar Excel vacío (llenado manual)", "", '1', func() {
+			c.showTableSelection("excel_empty")
+		}).
+		AddItem("2. Generar Excel con Fake Data", "", '2', func() {
+			c.showTableSelection("excel_fake")
+		}).
+		AddItem("3. Volver", "", '3', func() {
+			c.showMainMenu()
+		})
+
+	menu.SetBorder(true).SetTitle("Generación de Excel")
+
+	c.app.SetRoot(menu, true)
+}
 func (c *CLIAdapter) showMainMenu() error {
 	menu := tview.NewList().
 		AddItem("1. Generar PNG de las tablas", "", '1', func() {
@@ -48,7 +68,11 @@ func (c *CLIAdapter) showMainMenu() error {
 			c.showTableSelection("draw")
 		}).
 		AddItem("3. Generar Excel de las tablas", "", '3', func() {
-			c.showTableSelection("excel")
+			//c.showTableSelection("excel")
+			c.showExcelMenu()
+		}).
+		AddItem("4. Generar SQL de INSERT + ROLLBACK desde Excel", "", '4', func() {
+			c.showTableSelection("sql")
 		}).
 		AddItem("Salir", "", 'q', func() {
 			c.app.Stop()
@@ -63,6 +87,11 @@ func (c *CLIAdapter) showMainMenu() error {
 }
 
 func (c *CLIAdapter) showTableSelection(action string) {
+	if action == "sql" {
+		// Para SQL, no se seleccionan tablas, se genera todo desde el Excel
+		c.generate(action)
+		return
+	}
 	list := tview.NewList()
 	for i, table := range c.tables {
 		name := table.Name
@@ -73,6 +102,7 @@ func (c *CLIAdapter) showTableSelection(action string) {
 	}
 
 	list.SetSelectedFunc(func(index int, mainText, secondaryText string, shortcut rune) {
+
 		tableName := c.tables[index].Name
 		if !c.selected[tableName] {
 			// Seleccionar tabla y relacionadas
@@ -108,22 +138,42 @@ func (c *CLIAdapter) showTableSelection(action string) {
 
 func (c *CLIAdapter) generate(action string) {
 	var selectedTables []domain.Table
-	for _, t := range c.tables {
-		if c.selected[t.Name] {
-			selectedTables = append(selectedTables, t)
+	if action != "sql" {
+
+		for _, t := range c.tables {
+			if c.selected[t.Name] {
+				selectedTables = append(selectedTables, t)
+			}
 		}
 	}
+	fileName := fmt.Sprintf("%04d_%s", c.cfgConfig.Version, c.cfgConfig.NameArchive)
 
 	var err error
 	switch action {
 	case "png":
-		err = generator.GeneratePNG(selectedTables, c.fks, "schema.png")
+		err = generator.GeneratePNG(selectedTables, c.fks, fileName+".png")
 	case "draw":
-		err = generator.GenerateDraw(selectedTables, c.fks, "schema.drawio")
-	case "excel":
-		err = generator.GenerateExcel(selectedTables, "schema.xlsx")
-	}
+		err = generator.GenerateDraw(selectedTables, c.fks, fileName+".drawio")
+	//case "excel":
+		//err = generator.GenerateExcel(selectedTables, fileName+".xlsx")
+	case "excel_empty":
+		err = generator.GenerateExcel(selectedTables, fileName+".xlsx", 0)
+	case "excel_fake":
+		err = generator.GenerateExcel(selectedTables, fileName+".xlsx", 10)
+	case "sql":
+		err := generator.GenerateInsertRollbackFromExcel(c.cfgConfig.Version, fileName+".xlsx")
+		if err != nil {
+			message2 := fmt.Sprintln("Error generando SQL:", err)
+			modal := tview.NewModal().
+				SetText(message2).
+				AddButtons([]string{"OK"}).
+				SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+					c.showMainMenu()
+				})
 
+			c.app.SetRoot(modal, false)
+		}
+	}
 	message := "Generación completada"
 	if err != nil {
 		message = fmt.Sprintf("Error: %v", err)

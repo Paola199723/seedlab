@@ -3,6 +3,8 @@ package generator
 import (
 	"fmt"
 	"math"
+	"os"
+	"path/filepath"
 	"seedlab/internal/domain"
 
 	"github.com/fogleman/gg"
@@ -42,10 +44,10 @@ func GeneratePNG(tables []domain.Table, fks []domain.ForeignKey, filename string
 	dc.Clear()
 
 	//--------------------------------
-	// fuente
+	// texto
 	//--------------------------------
 
-	dc.SetRGB(0, 0, 0) // color texto
+	dc.SetRGB(0, 0, 0)
 
 	//--------------------------------
 	// mapa de tablas
@@ -142,22 +144,25 @@ func GeneratePNG(tables []domain.Table, fks []domain.ForeignKey, filename string
 
 			table := tableMap[name]
 
-			// Medir nombre tabla
 			w, _ := dc.MeasureString(table.Name)
+
 			if w > maxWidth {
 				maxWidth = w
 			}
 
 			for _, col := range table.Columns {
+
 				txt := fmt.Sprintf("%s : %s", col.Name, col.Type)
+
 				w, _ := dc.MeasureString(txt)
+
 				if w > maxWidth {
 					maxWidth = w
 				}
 			}
 		}
 
-		levelWidths[level] = maxWidth + 20 // padding
+		levelWidths[level] = maxWidth + 20
 	}
 
 	//--------------------------------
@@ -218,7 +223,6 @@ func GeneratePNG(tables []domain.Table, fks []domain.ForeignKey, filename string
 		srcY := src.Y + src.Height/2
 		dstY := dst.Y + dst.Height/2
 
-		// Usar curva Bezier para evitar superposiciones
 		cp1X := srcX + (dstX-srcX)*0.3
 		cp1Y := srcY
 		cp2X := dstX - (dstX-srcX)*0.3
@@ -233,7 +237,6 @@ func GeneratePNG(tables []domain.Table, fks []domain.ForeignKey, filename string
 
 		drawArrow(dc, dstX, dstY, angle)
 
-		// Calcular posición media para cardinalidad
 		midX := (srcX + dstX) / 2
 		midY := (srcY + dstY) / 2
 
@@ -241,12 +244,28 @@ func GeneratePNG(tables []domain.Table, fks []domain.ForeignKey, filename string
 		dc.DrawString(getCardinality(tables, validFKs, fk), midX-10, midY)
 	}
 
-	return dc.SavePNG(filename)
+	//--------------------------------
+	// crear carpeta png
+	//--------------------------------
+
+	folder := "png"
+
+	err := os.MkdirAll(folder, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	//--------------------------------
+	// guardar archivo dentro de png
+	//--------------------------------
+
+	outputPath := filepath.Join(folder, filename)
+
+	return dc.SavePNG(outputPath)
 }
 
 func drawTable(dc *gg.Context, table domain.Table, x, y, width, height float64, header float64, columnHeight float64) {
 
-	// fondo tabla
 	dc.SetRGB(0.92, 0.92, 0.92)
 	dc.DrawRectangle(x, y, width, height)
 	dc.FillPreserve()
@@ -254,7 +273,6 @@ func drawTable(dc *gg.Context, table domain.Table, x, y, width, height float64, 
 	dc.SetRGB(0, 0, 0)
 	dc.Stroke()
 
-	// nombre tabla
 	dc.DrawString(table.Name, x+10, y+20)
 
 	colY := y + header
@@ -324,29 +342,35 @@ func assignLevels(nodes map[string]*Node, fks []domain.ForeignKey) {
 
 func getCardinality(tables []domain.Table, fks []domain.ForeignKey, fk domain.ForeignKey) string {
 
-	// Check for reverse FK
 	hasReverse := false
+
 	for _, f := range fks {
 		if f.ReferencedTable == fk.Table && f.Table == fk.ReferencedTable {
 			hasReverse = true
 			break
 		}
 	}
+
 	if hasReverse {
 		return "*..*"
 	}
 
-	// Find the FK column and check if unique
 	for _, table := range tables {
+
 		if table.Name == fk.Table {
+
 			for _, col := range table.Columns {
+
 				if col.Name == fk.Column {
+
 					if col.IsUnique {
 						return "1..1"
 					}
+
 					break
 				}
 			}
+
 			break
 		}
 	}
