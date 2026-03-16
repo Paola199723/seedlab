@@ -27,7 +27,7 @@ func main() {
 	args := os.Args
 
 	if len(args) > 1 {
-		err := config.RunCLICommand(args, cfg)
+		err := config.RunCLICommand(args)
 		if err != nil {
 			log.Fatal(err)
 		}

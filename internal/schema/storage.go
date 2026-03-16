@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
+	"strings"
 )
 
 func SaveSnapshot(project string, snap Snapshot) error {
@@ -70,4 +72,51 @@ func LoadLastSnapshot(project string) (*Snapshot, error) {
 	}
 
 	return &snap, nil
+}
+func LoadLatestSnapshot(schemaDir string) (*Snapshot, string, error) {
+
+	files, err := filepath.Glob(filepath.Join(schemaDir, "*.json"))
+	if err != nil {
+		return nil, "", err
+	}
+
+	if len(files) == 0 {
+		return nil, "", fmt.Errorf("no schema files found")
+	}
+
+	var latestFile string
+	latestVersion := -1
+
+	for _, file := range files {
+
+		base := filepath.Base(file)
+		parts := strings.SplitN(base, "_", 2)
+
+		version, err := strconv.Atoi(parts[0])
+		if err != nil {
+			continue
+		}
+
+		if version > latestVersion {
+			latestVersion = version
+			latestFile = file
+		}
+	}
+
+	data, err := os.ReadFile(latestFile)
+	if err != nil {
+		return nil, "", err
+	}
+
+	var snapshot Snapshot
+
+	err = json.Unmarshal(data, &snapshot)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// obtener nombre sin extension
+	baseName := strings.TrimSuffix(filepath.Base(latestFile), ".json")
+
+	return &snapshot, baseName, nil
 }

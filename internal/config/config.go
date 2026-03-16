@@ -75,22 +75,22 @@ func getNextDrawVersion(folder string) (int, error) {
 
 	return maxVersion + 1, nil
 }
-func RunCLICommand(args []string,cfg *Config) error {
+func RunCLICommand(args []string) error {
 	var err error
-	last, _ := schema.LoadLastSnapshot(cfg.NameArchive)
+	last, NameArchive , _ := schema.LoadLatestSnapshot("schema")
 	var selectedTables = MapSnapshotToDomain(*last)
 	switch args[1] {
 
 	case "png":
-		err = generator.GeneratePNG(selectedTables.Tables, selectedTables.ForeignKeys, cfg.NameArchive+".png")
+		err = generator.GeneratePNG(selectedTables.Tables, selectedTables.ForeignKeys, NameArchive+".png")
 	case "draw":
-		err = generator.GenerateDraw(selectedTables.Tables, selectedTables.ForeignKeys, cfg.NameArchive+".drawio")
+		err = generator.GenerateDraw(selectedTables.Tables, selectedTables.ForeignKeys,NameArchive+".drawio")
 	//case "excel":
 		//err = generator.GenerateExcel(selectedTables, fileName+".xlsx")
 	case "all":
-		err = generator.GeneratePNG(selectedTables.Tables, selectedTables.ForeignKeys, cfg.NameArchive+".png")
+		err = generator.GeneratePNG(selectedTables.Tables, selectedTables.ForeignKeys, NameArchive+".png")
 		if err == nil {
-			err = generator.GenerateDraw(selectedTables.Tables, selectedTables.ForeignKeys, cfg.NameArchive+".drawio")
+			err = generator.GenerateDraw(selectedTables.Tables, selectedTables.ForeignKeys, NameArchive+".drawio")
 		}
 		if err != nil {
 			fmt.Println("Unknown command")
