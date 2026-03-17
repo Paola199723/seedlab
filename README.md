@@ -39,6 +39,23 @@ Aplicación en Go para generar SQL, Excel y diagramas UML a partir de una base d
 - **Omisión del campo `version` en la comparación** para prevenir falsos positivos y duplicados innecesarios.  
 - Formato de versión en archivos generados con ceros a la izquierda (`0001`, `0002`, …) para mantener **orden cronológico y consistencia**.  
 - Mejor manejo de errores y conflictos: validación de cambios locales antes de generar archivos y control de snapshots inexistentes o nuevos proyectos.
+- SeedLab ahora permite generar archivos Excel con datos de prueba automáticos (Fake Data) para facilitar pruebas y validaciones sin tener que llenar los archivos manualmente.
+
+## Características
+- Generación automática de datos según el tipo de columna.
+- Permite definir la cantidad de registros a generar.
+- Respeta la estructura del schema.
+- Ideal para pruebas rápidas o demos.
+- Evita errores humanos al llenar datos manualmente
+# Integración con CI/CD
+- SeedLab ahora puede ejecutarse automáticamente en pipelines de CI/CD para generar documentación de base de datos.
+- La herramienta detecta automáticamente el schema más reciente dentro de la carpeta: 
+schema/
+0001_inventory_seed_schema.json
+0002_inventory_seed_schema.json
+Comandos soportados en CI/CD
+` ./seedlab png ./seedlab draw`
+
 ---
 ## Arquitectura
 
