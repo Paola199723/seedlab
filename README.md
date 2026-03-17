@@ -49,6 +49,7 @@ Clean Architecture con capas:
 - Adapter: Interfaces (CLI)
 - Frameworks: Librerías externas
 
+
 ## Configuración
 
 1. Instalar Go 1.19+
