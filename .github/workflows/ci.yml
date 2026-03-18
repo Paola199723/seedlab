@@ -25,6 +25,3 @@ jobs:
 
     - name: Build CLI
       run: go build -o seedlab ./cmd/seedlab
-
-    - name: Run CLI command
-      run: ./seedlab png

@@ -66,6 +66,24 @@ Clean Architecture con capas:
 - Adapter: Interfaces (CLI)
 - Frameworks: Librerías externas
 
+## 1.2.0
+Integracion de IA 
+# 1. Instalar llama.cpp
+git clone https://github.com/ggerganov/llama.cpp
+cd llama.cpp
+make
+
+# 2. Descargar modelo
+mkdir models
+# (copiar phi-3-mini.gguf)
+
+# 3. Probar
+./llama-cli -m models/phi-3-mini.gguf -p "Hello"
+# Caracteristicas
+1. Generador de datos Fake para excel con IA para pruebas rapidas para la version consola
+2. Generador de documentacion en formato docx y .md para documentacion de las tablas en la base de datos
+3. Version compatible para ejecucion con CI/CD
+
 ## Configuración
 
 1. Instalar Go 1.19+

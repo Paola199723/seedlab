@@ -3,12 +3,13 @@ package generator
 import (
 	"os"
 	"path/filepath"
+	"seedlab/internal/ai"
 	"seedlab/internal/domain"
 
 	"github.com/xuri/excelize/v2"
 )
 
-func GenerateExcel(tables []domain.Table, filename string,fakeRows int) error {
+func GenerateExcel(tables []domain.Table, filename string, fakeRows int, useAI bool) error {
 
 	// crear carpeta excel si no existe
 	excelDir := "excel"
@@ -47,22 +48,41 @@ func GenerateExcel(tables []domain.Table, filename string,fakeRows int) error {
 			f.SetCellValue(sheetName, cell, col.Name)
 		}
 
-		if fakeRows > 0 {
 
-			for r := 0; r < fakeRows; r++ {
+var aiRows []map[string]interface{}
 
-				for cIndex, col := range table.Columns {
+if fakeRows > 0 {
 
-					cell, _ := excelize.CoordinatesToCellName(cIndex+1, r+2)
-
-					value := fakeValue(col.Name, col.Type, r+1)
-
-					f.SetCellValue(sheetName, cell, value)
-				}
+	// 👇 AQUÍ se llama el parser
+	if useAI {
+		jsonStr, err := ai.GenerateFakeRows(table, fakeRows)
+		if err == nil {
+			aiRows, err = ai.ParseRows(jsonStr)
+			if err != nil {
+				aiRows = nil // fallback si JSON falla
 			}
 		}
+	}
 
+	for r := 0; r < fakeRows; r++ {
 
+		for cIndex, col := range table.Columns {
+
+			cell, _ := excelize.CoordinatesToCellName(cIndex+1, r+2)
+
+			var value any
+
+			// 👇 AQUÍ usas los datos parseados
+			if useAI && aiRows != nil && r < len(aiRows) {
+				value = aiRows[r][col.Name]
+			} else {
+				value = fakeValue(col.Name, col.Type, r+1)
+			}
+
+			f.SetCellValue(sheetName, cell, value)
+		}
+	}
+}
 		if i == 0 {
 			f.SetActiveSheet(index)
 		}
