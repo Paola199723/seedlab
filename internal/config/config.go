@@ -1,10 +1,12 @@
 package config
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"seedlab/internal/domain"
@@ -79,14 +81,21 @@ func RunCLICommand(args []string) error {
 	var err error
 	last, NameArchive , _ := schema.LoadLatestSnapshot("schema")
 	var selectedTables = MapSnapshotToDomain(*last)
-	switch args[1] {
+	comand := args[1]
+	ver, err := GetVersionFromFilename(NameArchive)
+	fileName := fmt.Sprintf("%04d_%s", ver,NameArchive)
+	switch comand {
 
 	case "png":
 		err = generator.GeneratePNG(selectedTables.Tables, selectedTables.ForeignKeys, NameArchive+".png")
 	case "draw":
 		err = generator.GenerateDraw(selectedTables.Tables, selectedTables.ForeignKeys,NameArchive+".drawio")
-	//case "excel":
-		//err = generator.GenerateExcel(selectedTables, fileName+".xlsx")
+	case "excel":
+		fs := flag.NewFlagSet("excel", flag.ExitOnError)
+		rows := fs.Int("rows", 0, "number of fake rows")
+
+    	fs.Parse(args[2:])
+		err = generator.GenerateExcel(selectedTables.Tables, NameArchive+".xlsx", *rows, false)
 	case "all":
 		err = generator.GeneratePNG(selectedTables.Tables, selectedTables.ForeignKeys, NameArchive+".png")
 		if err == nil {
@@ -95,10 +104,30 @@ func RunCLICommand(args []string) error {
 		if err != nil {
 			fmt.Println("Unknown command")
 		}
+	case "document":	
+		err = generator.GenerateWord(selectedTables.Tables,selectedTables.ForeignKeys, fileName+".docx")
+	case "document-md":
+		err = generator.GenerateMarkdown(selectedTables.Tables, fileName+".md")
 	default:
 		fmt.Println("Unknown command")
 	}
+
 	return err
+}
+
+// GetVersionFromFilename extrae la versión de un archivo con formato "0001_name.json"
+func GetVersionFromFilename(filePath string) (int, error) {
+	base := filepath.Base(filePath) // solo el nombre, sin ruta
+	parts := strings.SplitN(base, "_", 2)
+	if len(parts) < 2 {
+		return 0, fmt.Errorf("archivo no tiene formato esperado: %s", base)
+	}
+	versionStr := parts[0]              // "0001"
+	version, err := strconv.Atoi(versionStr) // 1
+	if err != nil {
+		return 0, fmt.Errorf("error convirtiendo versión: %v", err)
+	}
+	return version, nil
 }
 func MapSnapshotToDomain(snapshot schema.Snapshot) domain.DatabaseSchema {
 

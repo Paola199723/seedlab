@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	baliance.com/gooxml v1.0.1 // indirect
 	github.com/awalterschulze/gographviz v2.0.3+incompatible // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/flopp/go-findfont v0.1.0 // indirect
@@ -29,6 +30,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/tetratelabs/wazero v1.10.1 // indirect
 	github.com/tiendc/go-deepcopy v1.7.2 // indirect
+	github.com/unidoc/unioffice v1.39.0 // indirect
 	github.com/xuri/efp v0.0.1 // indirect
 	github.com/xuri/nfp v0.0.2-0.20250530014748-2ddeb826f9a9 // indirect
 	golang.org/x/crypto v0.48.0 // indirect

@@ -49,6 +49,18 @@ Clean Architecture con capas:
 - Adapter: Interfaces (CLI)
 - Frameworks: Librerías externas
 
+## 1.2.0
+Integracion de IA 
+1. inatalacion IA local 
+   para Mac/ linux
+  `curl -fsSL https://ollama.com/install.sh | sh`
+2. Luego descarga un modelo ligero (ideal para CI/CD):
+  `ollama pull mistral`
+  - Modelo: Mistral 7B
+# Caracteristicas
+1. Generador de datos Fake para excel con IA para pruebas rapidas
+2. Generador de documentacion en formato docx y .md para documentacion de las tablas en la base de datos
+3. Version compatible para ejecucion con CI/CD
 
 ## Configuración
 
