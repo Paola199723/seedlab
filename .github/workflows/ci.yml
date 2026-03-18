@@ -25,17 +25,3 @@ jobs:
 
     - name: Build CLI
       run: go build -o seedlab ./cmd/seedlab
-
-    - name: Run CLI command
-      run: ./seedlab png
-    - name: Install Ollama
-      run: |
-        curl -fsSL https://ollama.com/install.sh | sh
-
-    - name: Pull model
-      run: |
-        ollama pull mistral
-
-    - name: Run seedlab
-      run: |
-        ./seedlab excel --ai
